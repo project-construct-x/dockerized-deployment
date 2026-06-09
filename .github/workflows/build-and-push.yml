@@ -1,0 +1,70 @@
+# Build und Push des Images zu GHCR (nur von main).
+# Credentials: GITHUB_TOKEN wird von GitHub bereitgestellt.
+#
+# Multi-Stage: Jede Stage (z. B. staging, production) bekommt ein eigenes
+# Image mit einer eigenen Kubeconfig. Die Secrets heißen:
+#   KUBECONFIG_B64_STAGING
+#   KUBECONFIG_B64_PRODUCTION
+#
+# Tags pro Stage:
+#   <stage>        (auf main, entspricht latest)
+#   <stage>-<sha>  (immer)
+name: Build and push to GHCR
+
+on:
+  push:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        stage:
+          - name: staging
+            secret: KUBECONFIG_B64_STAGING
+          - name: production
+            secret: KUBECONFIG_B64_PRODUCTION
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}
+          tags: |
+            type=raw,value=${{ matrix.stage.name }},enable=${{ github.ref == 'refs/heads/main' }}
+            type=sha,prefix=${{ matrix.stage.name }}-
+
+      - name: Build and push (${{ matrix.stage.name }})
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            KUBECONFIG_B64=${{ secrets[matrix.stage.secret] }}
+          cache-from: type=gha,scope=${{ matrix.stage.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.stage.name }}

@@ -1,4 +1,4 @@
-# dockerized-deployment: kubectl + helm, base64 kubeconfig, für GHA-Deployments
+# dockerized-deployment: kubectl + helm, base64 kubeconfig, for GHA deployments
 FROM alpine:3.21
 
 RUN apk add --no-cache \
@@ -18,14 +18,14 @@ RUN curl -sSL "https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz" \
     | tar -xz -C /usr/local/bin --strip-components=1 linux-amd64/helm \
     && chmod +x /usr/local/bin/helm
 
-# Kubeconfig zur Build-Zeit (Pipeline übergibt KUBECONFIG_B64); optional überschreibbar per Env zur Laufzeit
+# Kubeconfig at build time (pipeline passes KUBECONFIG_B64); optionally overridable via env at runtime
 ARG KUBECONFIG_B64
 RUN if [ -n "$KUBECONFIG_B64" ]; then \
       mkdir -p /opt/kubeconfig && \
       echo "$KUBECONFIG_B64" | base64 -d > /opt/kubeconfig/default && \
       chmod 600 /opt/kubeconfig/default; \
     fi
-# ENV sorgt dafür, dass kubectl auch bei überschriebenem Entrypoint (z. B. GHA container: jobs) die Kubeconfig nutzt
+# ENV ensures kubectl uses the kubeconfig even with overridden entrypoint (e.g. GHA container: jobs)
 ENV KUBECONFIG=/opt/kubeconfig/default
 
 COPY entrypoint.sh /entrypoint.sh

@@ -28,7 +28,7 @@ jobs:
             --set image.tag="${{ github.sha }}"
 ```
 
-> Den Tag auf `production` (oder eine andere Stage) ändern, um den entsprechenden Cluster anzusprechen.
+> Swap the tag to `production` (or another stage) to target the respective cluster.
 
 ### Override Kubeconfig at runtime
 

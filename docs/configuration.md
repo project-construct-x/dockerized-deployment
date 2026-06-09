@@ -10,16 +10,16 @@
 
 ## GitHub Actions Secrets
 
-Pro Stage wird ein eigenes Secret benötigt (siehe [Stage Matrix](#stage-matrix)).
+Each stage needs its own secret (see [Stage Matrix](#stage-matrix)).
 
 | Secret | Required | Description |
 |---|---|---|
-| `KUBECONFIG_B64_<STAGE>` | Pro Stage | Base64-encoded Kubeconfig für die jeweilige Stage, wird als Build-Arg ins Image gebacken |
+| `KUBECONFIG_B64_<STAGE>` | Per stage | Base64-encoded kubeconfig for the respective stage, baked into the image as build-arg |
 | `GITHUB_TOKEN` | Automatic | Provided by GitHub; used to authenticate to GHCR |
 
 ## Stage Matrix
 
-Die Stages werden in `.github/workflows/build-and-push.yml` als Matrix definiert. Jeder Eintrag ist ein Tupel aus `name` (Stage-Identifier, wird als Image-Tag verwendet) und `secret` (Name des GitHub-Secrets mit der Kubeconfig).
+Stages are defined in `.github/workflows/build-and-push.yml` as a matrix. Each entry is a tuple of `name` (stage identifier, used as image tag) and `secret` (name of the GitHub secret containing the kubeconfig).
 
 ```yaml
 strategy:
@@ -32,14 +32,14 @@ strategy:
         secret: KUBECONFIG_B64_PRODUCTION
 ```
 
-Die Matrix sorgt dafür, dass derselbe Build-Job pro Stage einmal läuft — mit dem jeweiligen Secret und Stage-spezifischen Image-Tags:
+The matrix ensures the same build job runs once per stage — with the respective secret and stage-specific image tags:
 
-| Stage | Secret | Image-Tag (latest) | Image-Tag (SHA) |
+| Stage | Secret | Image Tag (latest) | Image Tag (SHA) |
 |---|---|---|---|
 | `staging` | `KUBECONFIG_B64_STAGING` | `staging` | `staging-abc1234` |
 | `production` | `KUBECONFIG_B64_PRODUCTION` | `production` | `production-abc1234` |
 
-Neue Stages werden einfach als weiteres Tupel in der Matrix ergänzt:
+New stages are simply added as another tuple in the matrix:
 
 ```yaml
 - name: development

@@ -1,10 +1,10 @@
 # Documentation
 
-Dokumentation für das **dockerized-deployment** Docker-Image mit kubectl und Helm.
+Documentation for the **dockerized-deployment** Docker image with kubectl and Helm.
 
-## Inhaltsverzeichnis
+## Table of Contents
 
-- [Usage Guide](usage.md) – Verwendung des Images in GitHub Actions und lokal
-- [CI/CD Pipeline Example](cicd-example.md) – Komplette Single-Service CI/CD-Pipeline mit Build, Push und Helm-Deploy
-- [Configuration Reference](configuration.md) – Umgebungsvariablen, Build-Args und Secrets
-- [Development Guide](development.md) – Lokales Bauen, Testen und Beitragen
+- [Usage Guide](usage.md) – Using the image in GitHub Actions and locally
+- [CI/CD Pipeline Example](cicd-example.md) – Complete single-service CI/CD pipeline with build, push, and Helm deploy
+- [Configuration Reference](configuration.md) – Environment variables, build args, and secrets
+- [Development Guide](development.md) – Local build, testing, and contributing

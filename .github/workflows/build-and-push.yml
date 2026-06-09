@@ -1,14 +1,14 @@
-# Build und Push des Images zu GHCR (nur von main).
-# Credentials: GITHUB_TOKEN wird von GitHub bereitgestellt.
+# Build and push images to GHCR (from main only).
+# Credentials: GITHUB_TOKEN is provided by GitHub.
 #
-# Multi-Stage: Jede Stage (z. B. staging, production) bekommt ein eigenes
-# Image mit einer eigenen Kubeconfig. Die Secrets heißen:
+# Multi-Stage: Each stage (e.g. staging, production) gets its own
+# image with its own kubeconfig. The secrets are named:
 #   KUBECONFIG_B64_STAGING
 #   KUBECONFIG_B64_PRODUCTION
 #
-# Tags pro Stage:
-#   <stage>        (auf main, entspricht latest)
-#   <stage>-<sha>  (immer)
+# Tags per stage:
+#   <stage>        (on main, equivalent to latest)
+#   <stage>-<sha>  (always)
 name: Build and push to GHCR
 
 on:

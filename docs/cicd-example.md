@@ -135,7 +135,7 @@ jobs:
             --timeout=5m
 ```
 
-> Den Image-Tag auf `production` (oder eine andere Stage) ändern, um den jeweiligen Cluster anzusprechen.
+> Swap the image tag to `production` (or another stage) to target the respective cluster.
 
 ## Key Patterns
 
@@ -168,7 +168,7 @@ container:
     password: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-> Tag auf `production` ändern, um den Production-Cluster anzusprechen.
+> Swap the tag to `production` to target the production cluster.
 
 ### Dynamic image tag
 

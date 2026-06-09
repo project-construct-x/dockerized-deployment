@@ -1,41 +1,41 @@
 # dockerized-deployment
 
-Docker-Image mit **kubectl** und **Helm** für CI/CD. Führt beliebige Skripte (z. B. Helm-Deployments) aus.
+Docker image with **kubectl** and **Helm** for CI/CD. Runs arbitrary scripts (e.g. Helm deployments).
 
 ## Image
 
-- **kubectl** und **Helm** (Alpine-basiert)
-- **Kubeconfig**: wird zur **Build-Zeit** in der Pipeline dieses Repos übergeben (Secret `KUBECONFIG_B64`) und als Default ins Image eingebacken. In einem Job kann man optional per Env **`KUBECONFIG_B64`** überschreiben; wenn nicht gesetzt, gilt immer die zur Build-Zeit eingebackene Kubeconfig.
+- **kubectl** and **Helm** (Alpine-based)
+- **Kubeconfig**: passed at **build time** via the pipeline of this repo (secret `KUBECONFIG_B64`) and baked into the image as default. In a job, you can optionally override it via env **`KUBECONFIG_B64`**; if not set, the kubeconfig baked in at build time is always used.
 
 ## Build & Push
 
-Bei Push auf `main` baut `.github/workflows/build-and-push.yml` pro Stage ein Image und pusht es nach **GHCR**. Die Stages sind als Matrix definiert (z. B. `staging`, `production`), jede mit einem eigenen Secret.
+On push to `main`, `.github/workflows/build-and-push.yml` builds an image per stage and pushes it to **GHCR**. Stages are defined as a matrix (e.g. `staging`, `production`), each with its own secret.
 
-**In diesem Repository** müssen pro Stage Secrets gesetzt sein (base64-kodierte Kubeconfig):
+**In this repository**, secrets must be set per stage (base64-encoded kubeconfig):
 
-| Stage | Secret | Image-Tag |
+| Stage | Secret | Image Tag |
 |---|---|---|
 | `staging` | `KUBECONFIG_B64_STAGING` | `ghcr.io/<owner>/dockerized-deployment:staging` |
 | `production` | `KUBECONFIG_B64_PRODUCTION` | `ghcr.io/<owner>/dockerized-deployment:production` |
 
-Zum Anlegen eines Secrets von einer K3s-Instanz per SSH und `gh`:
+To create a secret from a K3s instance via SSH and `gh`:
 
 ```bash
 SECRET_NAME=KUBECONFIG_B64_STAGING ./scripts/set-kubeconfig-secret.sh
 ```
 
-Das Skript liest `/etc/rancher/k3s/k3s.yaml` vom SSH-Host, setzt die Server-URL auf `https://<host>:6443`, kodiert base64 und setzt das Secret per `gh secret set`. Optional: `SSH_HOST=myhost.example.com`, `SSH_USER=user`, `SECRET_NAME` oder `GITHUB_REPO=owner/repo` setzen.
+The script reads `/etc/rancher/k3s/k3s.yaml` from the SSH host, sets the server URL to `https://<host>:6443`, base64-encodes it, and sets the secret via `gh secret set`. Optional: set `SSH_HOST=myhost.example.com`, `SSH_USER=user`, `SECRET_NAME`, or `GITHUB_REPO=owner/repo`.
 
-- Push-Credentials: `GITHUB_TOKEN`
+- Push credentials: `GITHUB_TOKEN`
 
-## Nutzung in einer anderen GitHub Action (z. B. Deployment)
+## Usage in another GitHub Action (e.g. Deployment)
 
-Image als Container nutzen; **Default-Kubeconfig** ist die beim Build eingebackene (pro Stage). Optional: mit `KUBECONFIG_B64` im Job eine andere Kubeconfig setzen.
+Use the image as a container; the **default kubeconfig** is the one baked in at build time (per stage). Optionally, set `KUBECONFIG_B64` in the job to use a different kubeconfig.
 
-**Falls "Error response from daemon: denied" beim Pull:** Das andere Repo hat mit `GITHUB_TOKEN` standardmäßig kein Lese-Recht für dieses Package. Entweder:
+**If you get "Error response from daemon: denied" on pull:** The other repo does not have read access to this package by default with `GITHUB_TOKEN`. Either:
 
-- **Package öffentlich machen:** Repo dockerized-deployment → rechte Seite **Packages** → Package öffnen → **Package settings** → **Change visibility** → **Public**. Dann braucht der Deploy-Job keine speziellen Rechte.
-- **Oder Zugriff erlauben:** Unter Package settings → Manage Actions access das Ziel-Repository mit **Read** hinzufügen.
+- **Make the package public:** Repo dockerized-deployment → right sidebar **Packages** → open package → **Package settings** → **Change visibility** → **Public**. Then the deploy job does not need special permissions.
+- **Or grant access:** Under [Package settings → Manage Actions access](https://github.com/orgs/project-construct-x/packages/container/dockerized-deployment/settings), add the target repository with **Read** permission.
 
 ```yaml
 jobs:
@@ -46,7 +46,7 @@ jobs:
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    # Optional: eigene Kubeconfig statt der eingebackenen
+    # Optional: own kubeconfig instead of the baked-in one
     # env:
     #   KUBECONFIG_B64: ${{ secrets.KUBECONFIG_B64 }}
     steps:
@@ -58,9 +58,9 @@ jobs:
             --set image.tag="${{ github.sha }}"
 ```
 
-Für Production einfach den Tag tauschen: `dockerized-deployment:production`.
+For production, simply swap the tag: `dockerized-deployment:production`.
 
-Alternativ ohne `container:` – Image nur für einen Step:
+Alternatively, without `container:` – image only for a single step:
 
 ```yaml
 - name: Deploy with Helm
@@ -75,11 +75,11 @@ Alternativ ohne `container:` – Image nur für einen Step:
       '
 ```
 
-Empfohlen: Job mit `container:` (erstes Beispiel), dann läuft der ganze Job im Image und `run: |` ist das multiline Skript.
+Recommended: job with `container:` (first example), then the entire job runs inside the image and `run: |` is the multiline script.
 
-## Lokal bauen & testen
+## Local Build & Test
 
-Mit Kubeconfig zur Build-Zeit (Default im Image):
+With kubeconfig at build time (default in image):
 
 ```bash
 export KUBECONFIG_B64=$(cat ~/.kube/config | base64 -w0)
@@ -88,13 +88,13 @@ docker run --rm dockerized-deployment kubectl get nodes
 docker run --rm dockerized-deployment helm list -A
 ```
 
-Optional: zur Laufzeit andere Kubeconfig setzen:
+Optional: set a different kubeconfig at runtime:
 
 ```bash
 docker run --rm -e KUBECONFIG_B64="$OTHER_KUBECONFIG_B64" dockerized-deployment kubectl get nodes
 ```
 
-Multiline-Skript (mit Default-Kubeconfig):
+Multiline script (with default kubeconfig):
 
 ```bash
 docker run --rm dockerized-deployment sh -c '
@@ -111,4 +111,4 @@ This documentation is located in the `/docs` folder.
 
 All code files are distributed under the Apache 2.0 license. See [LICENSE](./LICENSE) for more information.
 
-All non-code files are distributed under the Creative Commons Attribution 4.0 International license. See [LICENSE_non-code](./LICENSE_non-code) for more information.
+All non-code files are distributed under the Creative Commons Attribution 4.0 International license. See [LICENSE_non_code](./LICENSE_non_code) for more information.

@@ -7,6 +7,8 @@ Docker image with **kubectl** and **Helm** for CI/CD. Runs arbitrary scripts (e.
 - **kubectl** and **Helm** (Alpine-based)
 - **Kubeconfig**: passed at **build time** via the pipeline of this repo (secret `KUBECONFIG_B64`) and baked into the image as default. In a job, you can optionally override it via env **`KUBECONFIG_B64`**; if not set, the kubeconfig baked in at build time is always used.
 
+> **Why not GitHub organization secrets?** GitHub offers [organization-level secrets](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-an-organization) that can be shared across all repositories in an org — but this is a **paid feature** (GitHub Enterprise). This repo achieves the same result with a free approach: one central place for cluster credentials, distributed as a pre-baked container image.
+
 ## Build & Push
 
 On push to `main`, `.github/workflows/build-and-push.yml` builds an image per stage and pushes it to **GHCR**. Stages are defined as a matrix (e.g. `staging`, `production`), each with its own secret.
